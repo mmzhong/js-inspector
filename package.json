@@ -1,0 +1,36 @@
+{
+  "name": "js-inspector",
+  "version": "1.0.0",
+  "description": "js inspector",
+  "main": "main.ts",
+  "scripts": {
+    "start": "gulp dev",
+    "test": "npm test"
+  },
+  "author": "mm",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/acorn": "^4.0.3",
+    "@types/escodegen": "0.0.6",
+    "@types/react": "^16.0.34",
+    "@types/react-dom": "^16.0.3",
+    "@types/requirejs": "^2.1.31",
+    "@types/rollup": "^0.51.4",
+    "gulp": "^4.0.0",
+    "gulp-newer": "^1.4.0",
+    "gulp-util": "^3.0.8",
+    "gulp-webserver": "^0.9.1",
+    "http-server": "^0.11.1",
+    "rollup": "^0.54.1",
+    "rollup-plugin-commonjs": "^8.2.6",
+    "rollup-plugin-node-resolve": "^3.0.2",
+    "rollup-plugin-typescript": "^0.8.1",
+    "typescript": "^2.6.2"
+  },
+  "dependencies": {
+    "acorn": "^5.3.0",
+    "monaco-editor": "^0.10.1",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0"
+  }
+}

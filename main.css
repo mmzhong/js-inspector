@@ -1,0 +1,110 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+main {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+* {
+  box-sizing: border-box;
+}
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+.code-area {
+  flex: 0 0 35%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+.display-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;  
+}
+
+.js-editor {
+  position: relative;
+  border: 1px dashed grey;
+  flex: 0 0 50%;
+}
+.html-editor {
+  position: relative;
+  border: 1px dashed grey;  
+  flex: 0 0 50%;
+}
+
+.render-indicator {
+  position: relative;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.render-indicator .square {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  background: red;
+}
+
+.square.rotate {
+  animation: rotate 1s linear 0s infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.runtime-panel {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+}
+
+.callstack {
+  flex: 0 0 50%;
+}
+.browser-panel {
+  flex: 0 0 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+.callback-queue {
+  flex: 0 0 30%;
+}
+
+.console-output {
+  flex: 0 0 30%;
+}
+.browser-api {
+  flex-grow: 1;
+}
+
+.visiual-container {
+  border: 1px dashed grey;
+}
+
+.control {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1000;
+}

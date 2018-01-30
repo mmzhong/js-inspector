@@ -1,0 +1,1 @@
+declare function postMessage(message: any, targetOrigin?: string, transfer?: any[]): void;
