@@ -2,6 +2,11 @@ export enum MessageType {
   transform,
   executeBefore,
   executeAfter,
+  scriptBefore,
+  scriptAfter,
+  timeoutStart,
+  timeoutEnd,
+  timeoutFinished,
   console,
 }
 

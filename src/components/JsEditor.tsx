@@ -1,7 +1,7 @@
 /// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { fibonacci, gpu, worker } from '../sample-code';
+import { fibonacci, gpu, worker, timeout } from '../sample-code';
 import { MessageData, MessageType } from './WorkerMessage';
 import AppStore from '../AppStore';
 
@@ -50,7 +50,7 @@ export default class JsEditor extends React.Component<JsEditorProps, JsEditorSta
   }
   ready() {
     this.editor = monaco.editor.create(this.container, {
-      value: fibonacci,
+      value: timeout,
       language: 'javascript',
       theme: 'hc-black',
       minimap: {
@@ -61,34 +61,49 @@ export default class JsEditor extends React.Component<JsEditorProps, JsEditorSta
     this.worker = new Worker('worker/main.js');
     this.worker.onmessage = (e) => {
       const { type, data } = e.data;
-      if (type === MessageType.console) {
-        // 欺骗 rollup 的空数据
-        if (data.length) {
+      let selection: monaco.ISelection, range, code;
+      switch(type) {
+        case MessageType.console:
           this.props.store.log(data);
-        }
+          return;
+        case MessageType.scriptBefore:
+          this.props.store.isWorkerRunning = true;
+          return;
+        case MessageType.scriptAfter:
+          // this.props.store.isWorkerRunning = false;
+          return;
+        case MessageType.timeoutStart:
+          this.props.store.pushBrowserApis(data.name);
+          return;
+        case MessageType.timeoutEnd:
+          this.props.store.popBrowserApis(data.name);
+          this.props.store.pushQueue(data.name);
         return;
+        case MessageType.timeoutFinished:
+          this.props.store.shiftQueue();
+        return;
+        case MessageType.executeBefore:
+          selection = location2Selection(data.location);
+          range = location2Range(data.location);
+          code = this.editor.getModel().getValueInRange(range);
+          this.props.store.pushCallstack(code);
+          this.selections.push(selection);
+          break;
+        case MessageType.executeAfter:
+          selection = location2Selection(data.location);        
+          this.props.store.popCallstack();
+          this.selections.pop();
+          break;
       }
-      const selection = location2Selection(data.location);
-      const range = location2Range(data.location);
-      if (type === MessageType.executeBefore) {
-        const code = this.editor.getModel().getValueInRange(range);
-        this.props.store.pushCallstack(code);
-        this.selections.push(selection);
-      } else if (type === MessageType.executeAfter) {
-        this.props.store.popCallstack();
-        this.selections.pop();
-      }
+
       if (this.selections.length) {
-        this.editor.setSelection(selection);
+        this.editor.setSelection(selection!);
       } else {
         this.editor.setPosition(this.editor.getPosition())
       }
     }
   }
   run() {
-    this.editor.getValue();
-  }
-  parse() {
     const code = this.editor.getValue();
     const data: MessageData = {
       type: MessageType.transform,
@@ -96,13 +111,8 @@ export default class JsEditor extends React.Component<JsEditorProps, JsEditorSta
     }
     this.worker.postMessage(data);
   }
-  instrument() {
-    const code = this.editor.getValue();
-    const data: MessageData = {
-      type: MessageType.transform,
-      value: code
-    }
-    this.worker.postMessage(data);
+  stop() {
+    this.props.store.isWorkerRunning = false;    
   }
   render() {
     return (
@@ -112,8 +122,7 @@ export default class JsEditor extends React.Component<JsEditorProps, JsEditorSta
       >
       <div className="control">
         <button onClick={ this.run.bind(this) }>Run</button>
-        <button onClick={ this.parse.bind(this) }>Parse</button>
-        <button onClick={ this.instrument.bind(this) }>Instrument</button>
+        <button onClick={ this.stop.bind(this) }>Stop</button>
       </div>
       </div>
     )

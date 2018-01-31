@@ -24,10 +24,10 @@ export default class App extends React.Component<{store: AppStore}, {}> {
             <CallStack store={this.props.store}/>
             <div className="browser-panel">
               <ConsoleOutput store={this.props.store} />
-              <BrowserApi />
+              <BrowserApi store={this.props.store} />
             </div>
           </div>
-          <CallbackQueue />
+          <CallbackQueue store={this.props.store} />
         </div>
       </main>
     )

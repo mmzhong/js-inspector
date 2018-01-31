@@ -33,8 +33,12 @@ const globalTmpObject = '__tmp';
 const tmpValuePrefix = '_';
 export const defaultTransformer: Transformer = {
   CallExpression(node, id, before, after) {
+    let source = node.source();
     const tmpValue = `${tmpValuePrefix}${tmpValueId}`;
-    node.update(`(${before(node, id)}, ${globalTmpObject}.${tmpValue} = ${node.source()}, ${after(node, id)}, ${globalTmpObject}.${tmpValue})`);
+    if (node.callee.source() === 'console.log') {
+      source = `log(${node.arguments.map((arg: EnhancedNode) => arg.source()).join(', ')})`;
+    }
+    node.update(`(${before(node, id)}, ${globalTmpObject}.${tmpValue} = ${source}, ${after(node, id)}, ${globalTmpObject}.${tmpValue})`);
     tmpValueId++;
   },
   BinaryExpression(node, id, before, after) {
@@ -57,7 +61,7 @@ function before(node: EnhancedNode, id: number): string {
     }),
     delay();
   }, MessageType.executeBefore, id, JSON.stringify(node.type), JSON.stringify(node.source()), JSON.stringify(node.loc));
-  return body.replace(';', '') // remove all comma
+  return body.substring(0, body.lastIndexOf(';')) // remove last comma
 }
 
 function after(node: EnhancedNode, id: number): string {
@@ -73,7 +77,7 @@ function after(node: EnhancedNode, id: number): string {
     }),
     delay();
   }, MessageType.executeAfter, id, JSON.stringify(node.type), JSON.stringify(node.source()), JSON.stringify(node.loc));
-  return body.replace(';', '') // remove all comma
+  return body.substring(0, body.lastIndexOf(';')) // remove last comma
 }
 
 export function transform(code: string, transformer = defaultTransformer, options = parseOptions): string {
@@ -151,5 +155,11 @@ function injectArgs(body: string, args: any[], argNames: string[]): string {
 
 export function execute(code: string) {
   const executeCode = eval; // prevent rollup warning
+  postMessage({
+    type: MessageType.scriptBefore
+  });
   executeCode(code);
+  postMessage({
+    type: MessageType.scriptAfter
+  });
 }

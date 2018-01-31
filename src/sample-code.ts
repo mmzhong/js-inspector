@@ -18,3 +18,9 @@ worker.onmessage = function(e) {
 }
 worker.postMessage(4);
 `
+
+export const timeout = `
+setTimeout(function() {
+  console.log(1);
+}, 2000);
+`;
