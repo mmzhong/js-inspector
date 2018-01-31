@@ -3,6 +3,12 @@ import * as React from 'react';
 export default class HtmlEditor extends React.Component<{}, {}> {
   container: HTMLElement;
   editor: monaco.editor.IStandaloneCodeEditor;
+  constructor(props: {}) {
+    super(props);
+    window.addEventListener('resize', () => {
+      this.editor && this.editor.layout();
+    });
+  }
   componentDidMount() {
     require(['vs/editor/editor.main'], this.ready.bind(this));
   }

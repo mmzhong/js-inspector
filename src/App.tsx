@@ -6,21 +6,24 @@ import CallbackQueue from './components/CallbackQueue';
 import BrowserApi from './components/BrowserApi';
 import ConsoleOutput from './components/ConsoleOutput';
 import HtmlEditor from './components/HtmlEditor';
+import AppStore from './AppStore';
+import { observer } from 'mobx-react';
 
-export default class App extends React.Component<{}, {}> {
+@observer
+export default class App extends React.Component<{store: AppStore}, {}> {
   render() {
     return (
       <main>
         <div className="code-area">
-          <JsEditor />
+          <JsEditor store={ this.props.store }/>
           <HtmlEditor />
         </div>
         <RenderIndicator />
         <div className="display-area">
           <div className="runtime-panel">
-            <CallStack />
+            <CallStack store={this.props.store}/>
             <div className="browser-panel">
-              <ConsoleOutput />
+              <ConsoleOutput store={this.props.store} />
               <BrowserApi />
             </div>
           </div>

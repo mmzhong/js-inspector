@@ -1,7 +1,8 @@
 export enum MessageType {
   transform,
   executeBefore,
-  executeAfter
+  executeAfter,
+  console,
 }
 
 export interface MessageData {

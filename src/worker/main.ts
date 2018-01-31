@@ -8,10 +8,21 @@ function onMessage(e: MessageEvent): void {
   const data = e.data as MessageData;
   if (data.type === MessageType.transform) {
     const code = transform(data.value);
-    const workerCode = generate(function(code, delayFn) {
+    const workerCode = generate(function(code, delayFn, console) {
+      "$console$";
       "$delayFn$";
       "$code$";
-    }, code, delay.toString());
+    }, code, delay.toString(), generate(function(type) {
+      const console = {
+        log(...args: any[]) {
+          postMessage({
+            type: "$type$",
+            data: args
+          })
+        }
+      }
+      console.log(); // 欺骗 rollup 以防被删
+    }, MessageType.console));
     execute(workerCode);
   }
 }

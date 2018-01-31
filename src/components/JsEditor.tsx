@@ -1,9 +1,20 @@
 /// <reference path="../../node_modules/monaco-editor/monaco.d.ts" />
 import * as React from 'react';
+import { observer } from 'mobx-react';
 import { fibonacci, gpu, worker } from '../sample-code';
 import { MessageData, MessageType } from './WorkerMessage';
+import AppStore from '../AppStore';
 
-function location2Selection(location: any): monaco.IRange {
+function location2Selection(location: any): monaco.ISelection {
+  return {
+    selectionStartColumn: location.start.column + 1,
+    selectionStartLineNumber: location.start.line,
+    positionColumn: location.end.column + 1,
+    positionLineNumber: location.end.line,
+  }
+}
+
+function location2Range(location: any): monaco.IRange {
   return {
     startColumn: location.start.column + 1,
     startLineNumber: location.start.line,
@@ -12,19 +23,24 @@ function location2Selection(location: any): monaco.IRange {
   }
 }
 
-interface JsEditorProps {};
+interface JsEditorProps {
+  store: AppStore
+};
 interface JsEditorState {
-  callstack: any[];
+  // callstack: any[];
 }
+
+@observer
 export default class JsEditor extends React.Component<JsEditorProps, JsEditorState> {
   container: HTMLElement;
   editor: monaco.editor.IStandaloneCodeEditor;
   worker: Worker;
+  selections: monaco.ISelection[] = [];
   constructor(props: JsEditorProps) {
     super(props);
-    this.state = {
-      callstack: []
-    };
+    window.addEventListener('resize', () => {
+      this.editor && this.editor.layout();
+    });
   }
   componentDidMount() {
     require(['vs/editor/editor.main'], this.ready.bind(this));
@@ -45,18 +61,28 @@ export default class JsEditor extends React.Component<JsEditorProps, JsEditorSta
     this.worker = new Worker('worker/main.js');
     this.worker.onmessage = (e) => {
       const { type, data } = e.data;
-      const callstack = this.state.callstack;
-      const selection = location2Selection(e.data.data.location);
-      if (type === MessageType.executeBefore) {
-        const code = this.editor.getModel().getValueInRange(selection);
-        callstack.push(code);
-        this.setState({ callstack });
-      } else if (type === MessageType.executeAfter) {
-        callstack.pop();
-        this.setState({ callstack });
+      if (type === MessageType.console) {
+        // 欺骗 rollup 的空数据
+        if (data.length) {
+          this.props.store.log(data);
+        }
+        return;
       }
-      console.log(callstack);
-      this.editor.setSelection(selection);
+      const selection = location2Selection(data.location);
+      const range = location2Range(data.location);
+      if (type === MessageType.executeBefore) {
+        const code = this.editor.getModel().getValueInRange(range);
+        this.props.store.pushCallstack(code);
+        this.selections.push(selection);
+      } else if (type === MessageType.executeAfter) {
+        this.props.store.popCallstack();
+        this.selections.pop();
+      }
+      if (this.selections.length) {
+        this.editor.setSelection(selection);
+      } else {
+        this.editor.setPosition(this.editor.getPosition())
+      }
     }
   }
   run() {
@@ -82,7 +108,7 @@ export default class JsEditor extends React.Component<JsEditorProps, JsEditorSta
     return (
       <div
         className="js-editor"
-        ref={(container => { this.container = container!; })} 
+        ref={(container => { this.container = container!; })}
       >
       <div className="control">
         <button onClick={ this.run.bind(this) }>Run</button>

@@ -1,8 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import App from './App';
+import AppStore from './AppStore';
 
 ReactDOM.render(
-  <App />,
+  <App store={new AppStore()} />,
   document.getElementById('app')
 );

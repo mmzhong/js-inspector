@@ -33,41 +33,15 @@ const globalTmpObject = '__tmp';
 const tmpValuePrefix = '_';
 export const defaultTransformer: Transformer = {
   CallExpression(node, id, before, after) {
-    // if (node.parent && shouldInjectTmpValue(node.parent.type)) {
-      const tmpValue = `${tmpValuePrefix}${tmpValueId}`;
-      node.update(`(${before(node, id)}, ${globalTmpObject}.${tmpValue} = ${node.source()}, ${after(node, id)}, ${globalTmpObject}.${tmpValue})`);
-      tmpValueId++;
-    // } else {
-    //   node.update(`(${before(node, id)}, ${node.source()}), ${after(node, id)}`);
-    // }
+    const tmpValue = `${tmpValuePrefix}${tmpValueId}`;
+    node.update(`(${before(node, id)}, ${globalTmpObject}.${tmpValue} = ${node.source()}, ${after(node, id)}, ${globalTmpObject}.${tmpValue})`);
+    tmpValueId++;
   },
   BinaryExpression(node, id, before, after) {
     const tmpValue = `${tmpValuePrefix}${tmpValueId}`;
     node.update(`(${before(node, id)}, ${globalTmpObject}.${tmpValue} = ${node.source()}, ${after(node, id)}, ${globalTmpObject}.${tmpValue})`);
     tmpValueId++;
-    // node.update(`(${before(node, id)}, ${after(node, id)}, ${node.source()})`);
   },
-  // ExpressionStatement(node, id, before, after) {
-  //   node.update(`${node.source()};`);
-  // }
-}
-
-function generateHookFn(messageType: MessageType) {
-  return function(node: EnhancedNode, id: number): string {
-    const body = generate(function(messageType, id, type, source, location) {
-      postMessage({
-        type: "$messageType$",
-        data: {
-          id: "$id$",
-          type: "$type$",
-          source: "$source$",
-          location: "$location$"
-        }
-      }),
-      delay();
-    }, messageType, id, JSON.stringify(node.type), JSON.stringify(node.source()), JSON.stringify(node.loc));
-    return body.replace(';', '') // remove all comma
-  }
 }
 
 function before(node: EnhancedNode, id: number): string {
@@ -96,7 +70,8 @@ function after(node: EnhancedNode, id: number): string {
         source: "$source$",
         location: "$location$"
       }
-    });
+    }),
+    delay();
   }, MessageType.executeAfter, id, JSON.stringify(node.type), JSON.stringify(node.source()), JSON.stringify(node.loc));
   return body.replace(';', '') // remove all comma
 }
@@ -126,7 +101,7 @@ export function transform(code: string, transformer = defaultTransformer, option
     transformer[node.type] && transformer[node.type](node as EnhancedNode, id, before, after);
     id++;
   }
-  console.log(ast);
+
   walk(ast as EnhancedNode, undefined);
 
   const source = (ast as EnhancedNode).source();
